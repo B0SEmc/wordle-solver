@@ -1,4 +1,7 @@
-use std::{fs::read_to_string, io::Write};
+use std::{
+    fs::read_to_string,
+    io::{Write, stdin, stdout},
+};
 
 fn load_words(path: &str) -> Vec<Vec<char>> {
     let mut words = vec![];
@@ -11,15 +14,28 @@ fn load_words(path: &str) -> Vec<Vec<char>> {
 
 fn get_pattern() -> Vec<char> {
     let mut pattern = String::new();
-    print!("Enter the pattern (A**D*): ");
-    std::io::stdout().flush().unwrap();
-    std::io::stdin().read_line(&mut pattern).unwrap();
+    stdin().read_line(&mut pattern).unwrap();
+    pattern = pattern.trim().to_string();
     pattern.chars().map(|c| c.to_ascii_uppercase()).collect()
+}
+
+fn does_contain_letter(word: &[char], letters: &Vec<char>) -> bool {
+    for letter in letters {
+        if !word.contains(letter) {
+            return false;
+        }
+    }
+    true
 }
 
 fn main() {
     let dictionnary = load_words("./src/words.txt");
+    print!("Enter the pattern (A**D*): ");
+    stdout().flush().unwrap();
     let pattern = get_pattern();
+    print!("Enter missplaced letters (ABC): ");
+    stdout().flush().unwrap();
+    let missplaced = get_pattern();
     let mut correct_words: Vec<Vec<char>> = vec![];
 
     for word in dictionnary.into_iter() {
@@ -34,6 +50,7 @@ fn main() {
             correct_words.push(word);
         }
     }
+    correct_words.retain(|i| does_contain_letter(i, &missplaced));
     println!();
     println!("Available words:");
     correct_words
