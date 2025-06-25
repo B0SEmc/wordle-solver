@@ -19,9 +19,26 @@ fn get_pattern() -> Vec<char> {
     pattern.chars().map(|c| c.to_ascii_uppercase()).collect()
 }
 
-fn does_contain_letter(word: &[char], letters: &Vec<char>) -> bool {
-    for letter in letters {
-        if !word.contains(letter) {
+fn does_not_contain_missplaced(word: &[char], missplaced: &[char]) -> bool {
+    for c in missplaced {
+        if !word.contains(c) {
+            return false;
+        }
+    }
+    true
+}
+
+fn is_valid_word(
+    word: &[char],
+    pattern: &[char],
+    missplaced: &[char],
+    invalid_letters: &[char],
+) -> bool {
+    if !does_not_contain_missplaced(word, missplaced) {
+        return false;
+    }
+    for (i, c) in word.iter().enumerate() {
+        if invalid_letters.contains(c) || pattern[i] != '*' && pattern[i] != *c {
             return false;
         }
     }
@@ -29,31 +46,21 @@ fn does_contain_letter(word: &[char], letters: &Vec<char>) -> bool {
 }
 
 fn main() {
-    let dictionnary = load_words("./src/words.txt");
+    let mut dictionnary = load_words("./src/words.txt");
     print!("Enter the pattern (A**D*): ");
     stdout().flush().unwrap();
     let pattern = get_pattern();
     print!("Enter missplaced letters (ABC): ");
     stdout().flush().unwrap();
     let missplaced = get_pattern();
-    let mut correct_words: Vec<Vec<char>> = vec![];
+    print!("Enter invalid letters (ABC): ");
+    stdout().flush().unwrap();
+    let invalid_letters = get_pattern();
 
-    for word in dictionnary.into_iter() {
-        let mut matches = true;
-        for (i, c) in word.iter().enumerate() {
-            if pattern[i] != '*' && pattern[i] != *c {
-                matches = false;
-                break;
-            }
-        }
-        if matches {
-            correct_words.push(word);
-        }
-    }
-    correct_words.retain(|i| does_contain_letter(i, &missplaced));
+    dictionnary.retain(|i| is_valid_word(i, &pattern, &missplaced, &invalid_letters));
     println!();
     println!("Available words:");
-    correct_words
+    dictionnary
         .into_iter()
         .for_each(|word| println!("{}", word.iter().collect::<String>()));
 }
