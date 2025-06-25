@@ -21,7 +21,16 @@ fn read_user_input(msg: &str) -> Vec<char> {
     input.chars().map(|c| c.to_ascii_uppercase()).collect()
 }
 
-fn does_not_contain_missplaced(word: &[char], missplaced: &[char]) -> bool {
+fn is_correct_pattern(word: &[char], pattern: &[char]) -> bool {
+    for (i, c) in word.iter().enumerate() {
+        if pattern[i] != '*' && pattern[i] != *c {
+            return false;
+        }
+    }
+    true
+}
+
+fn contain_all_missplaced(word: &[char], missplaced: &[char]) -> bool {
     for c in missplaced {
         if !word.contains(c) {
             return false;
@@ -30,17 +39,9 @@ fn does_not_contain_missplaced(word: &[char], missplaced: &[char]) -> bool {
     true
 }
 
-fn is_valid_word(
-    word: &[char],
-    pattern: &[char],
-    missplaced: &[char],
-    invalid_letters: &[char],
-) -> bool {
-    if !does_not_contain_missplaced(word, missplaced) {
-        return false;
-    }
-    for (i, c) in word.iter().enumerate() {
-        if invalid_letters.contains(c) || pattern[i] != '*' && pattern[i] != *c {
+fn does_not_contain_invalid_letters(word: &[char], invalid_letters: &[char]) -> bool {
+    for c in invalid_letters {
+        if word.contains(c) {
             return false;
         }
     }
@@ -50,10 +51,45 @@ fn is_valid_word(
 fn main() {
     let mut dictionnary = load_words("./src/words.txt");
     let pattern = read_user_input("Enter the pattern (t*Up*): ");
+    dictionnary.retain(|word| is_correct_pattern(word, &pattern));
+    if dictionnary.is_empty() {
+        eprintln!("No word found with this configuration !");
+        std::process::exit(1);
+    }
+    if dictionnary.len() == 1 {
+        println!(
+            "The only solution is : {}",
+            dictionnary[0].iter().collect::<String>()
+        );
+        return;
+    }
     let missplaced = read_user_input("Enter missplaced letters (aBc): ");
+    dictionnary.retain(|word| contain_all_missplaced(word, &missplaced));
+    if dictionnary.is_empty() {
+        eprintln!("No word found with this configuration !");
+        std::process::exit(1);
+    }
+    if dictionnary.len() == 1 {
+        println!(
+            "The only solution is : {}",
+            dictionnary[0].iter().collect::<String>()
+        );
+        return;
+    }
     let invalid_letters = read_user_input("Enter invalid letters (AbC): ");
+    dictionnary.retain(|word| does_not_contain_invalid_letters(word, &invalid_letters));
+    if dictionnary.is_empty() {
+        eprintln!("No word found with this configuration !");
+        std::process::exit(1);
+    }
+    if dictionnary.len() == 1 {
+        println!(
+            "The only solution is : {}",
+            dictionnary[0].iter().collect::<String>()
+        );
+        return;
+    }
 
-    dictionnary.retain(|i| is_valid_word(i, &pattern, &missplaced, &invalid_letters));
     println!();
     println!("Available words:");
     dictionnary
