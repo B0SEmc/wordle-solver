@@ -12,11 +12,13 @@ fn load_words(path: &str) -> Vec<Vec<char>> {
     words
 }
 
-fn get_pattern() -> Vec<char> {
-    let mut pattern = String::new();
-    stdin().read_line(&mut pattern).unwrap();
-    pattern = pattern.trim().to_string();
-    pattern.chars().map(|c| c.to_ascii_uppercase()).collect()
+fn read_user_input(msg: &str) -> Vec<char> {
+    let mut input = String::new();
+    print!("{}", msg);
+    stdout().flush().unwrap();
+    stdin().read_line(&mut input).unwrap();
+    input = input.trim().to_string();
+    input.chars().map(|c| c.to_ascii_uppercase()).collect()
 }
 
 fn does_not_contain_missplaced(word: &[char], missplaced: &[char]) -> bool {
@@ -47,15 +49,9 @@ fn is_valid_word(
 
 fn main() {
     let mut dictionnary = load_words("./src/words.txt");
-    print!("Enter the pattern (A**D*): ");
-    stdout().flush().unwrap();
-    let pattern = get_pattern();
-    print!("Enter missplaced letters (ABC): ");
-    stdout().flush().unwrap();
-    let missplaced = get_pattern();
-    print!("Enter invalid letters (ABC): ");
-    stdout().flush().unwrap();
-    let invalid_letters = get_pattern();
+    let pattern = read_user_input("Enter the pattern (t*Up*): ");
+    let missplaced = read_user_input("Enter missplaced letters (aBc): ");
+    let invalid_letters = read_user_input("Enter invalid letters (AbC): ");
 
     dictionnary.retain(|i| is_valid_word(i, &pattern, &missplaced, &invalid_letters));
     println!();
