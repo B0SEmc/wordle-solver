@@ -20,10 +20,6 @@ fn read_user_input(msg: &str) -> Vec<char> {
     stdout().flush().unwrap();
     stdin().read_line(&mut input).unwrap();
     input = input.trim().to_string();
-    if input.len() != WORDLE_LENGTH && !input.is_empty() {
-        eprintln!("The pattern must be {} characters long!", WORDLE_LENGTH);
-        std::process::exit(1);
-    }
     input.chars().map(|c| c.to_ascii_uppercase()).collect()
 }
 
@@ -60,6 +56,10 @@ fn does_not_contain_invalid_letters(word: &[char], invalid_letters: &[char]) -> 
 fn main() {
     let mut dictionnary = load_words("./src/words.txt");
     let pattern = read_user_input("Enter the pattern (t*Up*): ");
+    if pattern.len() != WORDLE_LENGTH && !pattern.is_empty() {
+        eprintln!("The pattern must be {} characters long!", WORDLE_LENGTH);
+        std::process::exit(1);
+    }
     dictionnary.retain(|word| is_correct_pattern(word, &pattern));
     if dictionnary.is_empty() {
         eprintln!("No word found with this configuration!");
