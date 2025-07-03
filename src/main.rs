@@ -17,7 +17,7 @@ fn load_words(path: &str) -> Vec<Vec<char>> {
 
 fn read_user_input(msg: &str) -> Vec<char> {
     let mut input = String::new();
-    print!("{}", msg);
+    print!("{msg}");
     stdout().flush().unwrap();
     stdin().read_line(&mut input).unwrap();
     input = input.trim().to_string();
@@ -76,11 +76,39 @@ fn check_end(dictionnary: &[Vec<char>]) {
     }
 }
 
+fn get_best_word(dictionnary: &[Vec<char>]) -> &Vec<char> {
+    let mut ideal: Vec<char> = vec!['A'; WORDLE_LENGTH];
+    let mut word_score: Vec<i32> = vec![0; dictionnary.len()];
+    for i in 0..WORDLE_LENGTH {
+        let mut score: Vec<i32> = vec![0; 26];
+        for word in dictionnary {
+            score[word[i] as usize - 'A' as usize] += 1;
+        }
+        if let Some((index, _)) = score.iter().enumerate().max_by_key(|&(_, &val)| val) {
+            ideal[i] = (index as u32 + 'A' as u32) as u8 as char;
+        } else {
+            eprintln!("An error occured when determining the best word to use!");
+            std::process::exit(1);
+        }
+        for j in 0..dictionnary.len() {
+            if dictionnary[j][i] == ideal[i] {
+                word_score[j] += 1;
+            }
+        }
+    }
+    if let Some((index, _)) = word_score.iter().enumerate().max_by_key(|&(_, &val)| val) {
+        &dictionnary[index]
+    } else {
+        eprintln!("An error occured when determining the best word to use!");
+        std::process::exit(1);
+    }
+}
+
 fn main() {
     let mut dictionnary = load_words(DICTIONARY);
     let pattern = read_user_input("Enter the pattern (t*Up* / nothing): ");
     if pattern.len() != WORDLE_LENGTH && !pattern.is_empty() {
-        eprintln!("\nThe pattern must be {} characters long!", WORDLE_LENGTH);
+        eprintln!("\nThe pattern must be {WORDLE_LENGTH} characters long!");
         std::process::exit(1);
     }
     dictionnary.retain(|word| is_correct_pattern(word, &pattern));
@@ -89,10 +117,7 @@ fn main() {
     let mut missplaced = vec![];
     while !user_line.is_empty() {
         if user_line.len() != WORDLE_LENGTH && !user_line.is_empty() {
-            eprintln!(
-                "\nThe missplaced letters pattern must be {} characters long!",
-                WORDLE_LENGTH
-            );
+            eprintln!("\nThe missplaced letters pattern must be {WORDLE_LENGTH} characters long!");
             std::process::exit(1);
         }
         missplaced.push(user_line);
@@ -104,9 +129,10 @@ fn main() {
     dictionnary.retain(|word| does_not_contain_invalid_letters(word, &invalid_letters));
     check_end(&dictionnary);
 
-    println!();
-    println!("Available words:");
+    println!("\nAvailable words:");
     dictionnary
-        .into_iter()
+        .iter()
         .for_each(|word| println!("{}", word.iter().collect::<String>()));
+    println!("\nBest word to try:");
+    println!("{}", get_best_word(&dictionnary).iter().collect::<String>());
 }
